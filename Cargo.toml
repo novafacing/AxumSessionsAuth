@@ -53,6 +53,7 @@ dashmap = "5.4.0"
 chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde", "std"] }
 tokio = { version = "1.26.0", features = ["full"] }
 serde = "1.0.155"
+tracing = "0.1.37"
 
 [dependencies.axum_session]
 #path = "D:/Sources/AxumSessions"

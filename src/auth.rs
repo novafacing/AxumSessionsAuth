@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use http::Method;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt, hash::Hash, marker::PhantomData};
+use tracing::{debug, trace};
 
 /// Trait is used to check their Permissions via Tokens.
 ///
@@ -129,7 +130,7 @@ impl Rights {
 ///
 pub struct Auth<User, Type, Pool>
 where
-    User: Authentication<User, Type, Pool> + HasPermission<Pool> + Send,
+    User: Authentication<User, Type, Pool> + HasPermission<Pool> + fmt::Debug + Send,
     Pool: Clone + Send + Sync + fmt::Debug + 'static,
     Type: Eq + Default + Clone + Send + Sync + Hash + Serialize + DeserializeOwned + 'static,
 {
@@ -143,7 +144,7 @@ where
 
 impl<User, Type, Pool> Auth<User, Type, Pool>
 where
-    User: Authentication<User, Type, Pool> + HasPermission<Pool> + Sync + Send,
+    User: Authentication<User, Type, Pool> + HasPermission<Pool> + fmt::Debug + Sync + Send,
     Pool: Clone + Send + Sync + fmt::Debug + 'static,
     Type: Eq + Default + Clone + Send + Sync + Hash + Serialize + DeserializeOwned + 'static,
 {
@@ -220,13 +221,17 @@ where
     where
         User: HasPermission<Pool> + Authentication<User, Type, Pool>,
     {
+        trace!("Validating user {:?}", user);
+
         if self.auth_required && !user.is_authenticated() {
+            trace!("User is not authenticated and auth is required. Not validated.");
             return false;
         }
 
         if self.methods.iter().any(|r| r == method) {
             self.rights.evaluate(user, &db).await
         } else {
+            debug!("No matching method found. Not validated.");
             false
         }
     }

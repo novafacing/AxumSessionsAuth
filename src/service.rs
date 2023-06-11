@@ -20,6 +20,7 @@ use std::{
     task::{Context, Poll},
 };
 use tower_service::Service;
+use tracing::error;
 
 #[derive(Clone)]
 pub struct AuthSessionService<S, User, Type, Sess, Pool>
@@ -72,10 +73,12 @@ where
             let axum_session = match req.extensions().get::<Session<Sess>>().cloned() {
                 Some(session) => session,
                 None => {
-                    return Ok(Response::builder()
+                    let response = Ok(Response::builder()
                         .status(StatusCode::UNAUTHORIZED)
                         .body(body::boxed(Full::from("401 Unauthorized")))
                         .unwrap());
+                    error!("No session found in extensions");
+                    return response;
                 }
             };
 
